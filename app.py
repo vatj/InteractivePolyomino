@@ -32,6 +32,7 @@ app.config.suppress_callback_exceptions = True
 # # from apps import app_duplication_set_table, app_duplication_isomorphism
 # from apps import app_fit_distribution
 # from apps import app_visual_polyomino
+from apps import app_interactive_genomes
 
 
 app.layout = html.Div([
