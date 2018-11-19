@@ -15,3 +15,7 @@ scripts/__pycache__/*
 
 # Ignore the hdf5 files
 data/*.h5
+
+# Ignore jupyter notebooks
+scripts/*.ipynb
+scripts/.ipynb_checkpoints
