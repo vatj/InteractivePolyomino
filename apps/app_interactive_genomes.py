@@ -14,9 +14,19 @@ import pandas as pd
 import re
 
 from app import app
+from scripts/generate_config.py import parameters
 
 
-
-
-
-layout = html.Div()
+layout = html.Div([
+    html.H3('Control Parameters :'),
+    html.Div(dcc.Dropdown(
+        id='dropdown-ngenes',
+        options=[{'label': str(val), 'value': val} for val in range(2, 5)],
+        value=2, multi=False, placeholder='ex : 2'),
+    style={'width': '400px'}),
+    html.Div(dcc.Dropdown(
+        id='dropdown-metric-colours',
+        options=[{'label': str(val), 'value': val} for val in range(3, 15, 2)],
+        value=7, multi=False, placeholder='ex : 7'),
+    style={'width': '400px'}),
+], className="container")
