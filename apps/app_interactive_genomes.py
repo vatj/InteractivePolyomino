@@ -13,7 +13,7 @@ import plotly.graph_objs as go
 import pandas as pd
 import re
 
-from app import app
+from app import app, scripts
 # from scripts/generate_config.py import parameters
 
 ########################
@@ -108,14 +108,43 @@ layout = html.Div(children=[
                 filterable=True,
                 sortable=True,
                 selected_row_indices=[0],
-                id='datatable-set-distribution-isomorphic-all'
+                id='datatable-genome-metric'
             ), style={'display' : 'inline-block', 'width' : '1600px'}),
 
         # Bar Graph for Neighbours
 
         html.Div(
             dcc.Graph(
-                id='graph-set-distribution-isomorphic-all'
+                id='graph-neighbourhood-distribution'
             ), style={'display' : 'inline-block'})
 
 ], className="container")
+
+
+
+# Interactive callback functions
+
+
+
+@app.callback(
+    Output('graph-neighbourhood-distribution', 'figure'),
+    [Input('datatable-genome-metric', 'rows'),
+     Input('datatable-genome-metric', 'selected_row_indices')])
+def update_figure(rows, indices):
+    dff = pd.DataFrame(rows)
+
+    fig = plotly.tools.make_subplots(
+        rows=max(1, len(selected_row_indices)), cols=2,
+        # subplot_titles=titles,
+        shared_xaxes=False)
+
+    for index in indices:
+        genome = dff.loc[index, 'genome']
+        print(genome)
+        dat = dfn.loc[slice(None),(genome,'pIDs')].value_counts()
+        fig.append_trace({
+            'x' : dat,
+            'type' : 'histogram',
+            'showlegend': True
+        })
+    return fig

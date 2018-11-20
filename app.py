@@ -9,6 +9,8 @@ import pandas as pd
 import re
 import json
 
+import scripts
+
 from dash.dependencies import Input, Output
 
 os.nice(15)
