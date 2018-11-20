@@ -13,24 +13,27 @@ import plotly.graph_objs as go
 import pandas as pd
 import re
 
-from app import app, scripts
+from app import app
+from myscripts import neighbourhood_reshape, generate_config
 # from scripts/generate_config.py import parameters
+
+
 
 ########################
 ##
 ## REMOVE TO USE THE FUNCTION DEFINED IN SCRIPTS
 ##
-def neighbourhood_reshape(df, dfn, n_genes, colours):
-    neighbours = 4 * n_genes * (colours - 1)
-    columns = pd.MultiIndex.from_product([df['genome'].tolist(), ['genome', 'pIDs']], names=['original', 'neighbour'])
-
-    new_df = pd.DataFrame(index=pd.Series(range(0, neighbours)), columns=columns)
-
-    for genome, index in zip(df['genome'], range(0, len(df['genome']))):
-        new_df.T.loc[(genome, 'genome'), :] = dfn[(index * neighbours):((index + 1) * neighbours)]['genome'].values
-        new_df.T.loc[(genome, 'pIDs'), :] = dfn[(index * neighbours):((index + 1) * neighbours)]['genome'].values
-
-    return new_df
+# def neighbourhood_reshape(df, dfn, n_genes, colours):
+#     neighbours = 4 * n_genes * (colours - 1)
+#     columns = pd.MultiIndex.from_product([df['genome'].tolist(), ['genome', 'pIDs']], names=['original', 'neighbour'])
+#
+#     new_df = pd.DataFrame(index=pd.Series(range(0, neighbours)), columns=columns)
+#
+#     for genome, index in zip(df['genome'], range(0, len(df['genome']))):
+#         new_df.T.loc[(genome, 'genome'), :] = dfn[(index * neighbours):((index + 1) * neighbours)]['genome'].values
+#         new_df.T.loc[(genome, 'pIDs'), :] = dfn[(index * neighbours):((index + 1) * neighbours)]['pIDs'].values
+#
+#     return new_df
 ##
 ########################################
 
@@ -42,7 +45,8 @@ df = pd.read_csv(filepath + 'GenomeMetrics_N2_C7_T25_B40_Cx9_J3.txt', sep=' ')
 
 dfn = pd.read_csv(filepath + 'Neighbourhood_N2_C7_T25_B40_Cx9_J3.txt', sep=' ', names=['genome', 'pIDs'], index_col=False)
 
-ndf = neighbourhood_reshape(df, dfn, 2, 9)
+ndf = neighbourhood_reshape.neighbourhood_reshape(df, dfn, 2, 9)
+
 
 layout = html.Div(children=[
     # Control Panel
@@ -101,7 +105,7 @@ layout = html.Div(children=[
 
         html.Div(
             dt.DataTable(
-                rows=df.round(3).to_dict('records'),
+                rows=df.round(4).to_dict('records'),
                 # optional - sets the order of columns
                 columns=display_names,
                 row_selectable=True,
@@ -130,7 +134,9 @@ layout = html.Div(children=[
     Output('graph-neighbourhood-distribution', 'figure'),
     [Input('datatable-genome-metric', 'rows'),
      Input('datatable-genome-metric', 'selected_row_indices')])
-def update_figure(rows, indices):
+def update_figure(rows, selected_row_indices):
+    print('Blueberry')
+
     dff = pd.DataFrame(rows)
 
     fig = plotly.tools.make_subplots(
@@ -141,7 +147,7 @@ def update_figure(rows, indices):
     for index in indices:
         genome = dff.loc[index, 'genome']
         print(genome)
-        dat = dfn.loc[slice(None),(genome,'pIDs')].value_counts()
+        dat = ndf.loc[slice(None),(genome,'pIDs')].value_counts()
         fig.append_trace({
             'x' : dat,
             'type' : 'histogram',

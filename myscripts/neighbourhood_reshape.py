@@ -1,19 +1,20 @@
 
 # coding: utf-8
 
-# In[15]:
+# In[28]:
 
 
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
-# In[177]:
+# In[29]:
 
 
-get_ipython().magic('matplotlib inline')
+# %matplotlib inline
 
 
-# In[32]:
+# In[30]:
 
 
 address = 'http://files.tcm.phy.cam.ac.uk/~vatj2/Polyominoes/data/gpmap/V8/interactive/'
@@ -22,7 +23,7 @@ df = pd.read_csv(address + 'GenomeMetrics_N2_C7_T25_B40_Cx9_J3.txt', sep=' ')
 dfn = pd.read_csv(address + 'Neighbourhood_N2_C7_T25_B40_Cx9_J3.txt', sep=' ', names=['genome', 'pIDs'], index_col=False)
 
 
-# In[ ]:
+# In[31]:
 
 
 def neighbourhood_reshape(df, dfn, n_genes, colours):
@@ -33,19 +34,24 @@ def neighbourhood_reshape(df, dfn, n_genes, colours):
     
     for genome, index in zip(df['genome'], range(0, len(df['genome']))):
         new_df.T.loc[(genome, 'genome'), :] = dfn[(index * neighbours):((index + 1) * neighbours)]['genome'].values
-        new_df.T.loc[(genome, 'pIDs'), :] = dfn[(index * neighbours):((index + 1) * neighbours)]['genome'].values
-
+        new_df.T.loc[(genome, 'pIDs'), :] = dfn[(index * neighbours):((index + 1) * neighbours)]['pIDs'].values
     return new_df
 
 
-# In[155]:
+# In[32]:
 
 
 new_df = neighbourhood_reshape(df, dfn, 2, 9)
 
 
-# In[178]:
+# In[33]:
 
 
-new_df.loc[slice(None),('(0,0,0,1,0,0,0,2)','pIDs')].hist()
+# new_df.loc[slice(None),('(0,0,0,1,0,0,0,2)','pIDs')].value_counts()
+
+
+# In[38]:
+
+
+# plt.figure; new_df.loc[slice(None),('(0,0,0,1,0,0,0,2)','pIDs')].value_counts().plot(kind='bar');
 

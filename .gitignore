@@ -4,7 +4,7 @@ venv/*
 # Ignore pycache
 __pycache__/*
 apps/__pycache__/*
-scripts/__pycache__/*
+myscripts/__pycache__/*
 
 # Ignore Mac specific files
 .DS_Store
@@ -17,5 +17,5 @@ scripts/__pycache__/*
 data/*.h5
 
 # Ignore jupyter notebooks
-scripts/*.ipynb
-scripts/.ipynb_checkpoints
+myscripts/*.ipynb
+myscripts/.ipynb_checkpoints
