@@ -15,27 +15,8 @@ import re
 
 from app import app
 from myscripts import neighbourhood_reshape, generate_config
-# from scripts/generate_config.py import parameters
 
-
-
-########################
-##
-## REMOVE TO USE THE FUNCTION DEFINED IN SCRIPTS
-##
-# def neighbourhood_reshape(df, dfn, n_genes, colours):
-#     neighbours = 4 * n_genes * (colours - 1)
-#     columns = pd.MultiIndex.from_product([df['genome'].tolist(), ['genome', 'pIDs']], names=['original', 'neighbour'])
-#
-#     new_df = pd.DataFrame(index=pd.Series(range(0, neighbours)), columns=columns)
-#
-#     for genome, index in zip(df['genome'], range(0, len(df['genome']))):
-#         new_df.T.loc[(genome, 'genome'), :] = dfn[(index * neighbours):((index + 1) * neighbours)]['genome'].values
-#         new_df.T.loc[(genome, 'pIDs'), :] = dfn[(index * neighbours):((index + 1) * neighbours)]['pIDs'].values
-#
-#     return new_df
-##
-########################################
+temp_cfg = '/rscratch/vatj2/cloud/PolyominoDash/InteractivePolyomino/configure.cfg'
 
 filepath = 'http://files.tcm.phy.cam.ac.uk/~vatj2/Polyominoes/data/gpmap/V8/interactive/'
 
@@ -83,8 +64,16 @@ layout = html.Div(children=[
         style={'marginTop': -5, 'display' : 'inline-block'})],
         style={'width': '400px'}),
         html.Div(
+            id='custom-parameters',
+            style={'display':'none'}
+        ),
+        html.Div(
             html.Button('Update Configuration', id='button-update-configuration'),
-            style={'horizontalAlign' : 'middle'})],
+            style={'horizontalAlign' : 'middle'}),
+        html.Div(
+            id='config-output',
+            style={'display':'none'}
+        )],
         style={'verticalAlign' : 'top', 'display' : 'inline-block'}),
 
         # Genome Input
@@ -128,6 +117,36 @@ layout = html.Div(children=[
 
 # Interactive callback functions
 
+@app.callback(
+    Output('custom-parameters', 'children'),
+    [Input('dropdown-ngenes', 'value'),
+    Input('dropdown-metric-colour', 'value'),
+    Input('box-threshold', 'value'),
+    Input('box-builds', 'value')])
+def update_local_config(ngenes, metric_colours, threshold, builds):
+    local_parameters = generate_config.parameters.copy()
+
+    print('old : ', local_parameters)
+
+    local_update = dict()
+    local_update['ngenes'] = ngenes
+    local_update['metric_colours'] = metric_colours
+    local_update['threshold'] = threshold
+    local_update['builds'] = builds
+
+    local_parameters.update(local_update)
+
+    print('new : ', local_parameters)
+
+    return local_parameters
+
+
+@app.callback(
+    Output('config-output', 'children'),
+    [Input('custom-parameters', 'children'),
+    Input('button-update-configuration', 'event')])
+def write_config_file(local_parameters):
+    generate_config.write_config(temp_cfg, local_parameters)
 
 
 @app.callback(
