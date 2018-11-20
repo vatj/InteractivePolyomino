@@ -101,10 +101,10 @@ def write_config(parameters, file):
         for key, value in parameters['execute'].items():
             f.write(''.join([key, ' = ', str(value), '\n']))
         f.write('\n# IO Options\n')
-        for key, value in io_parameters.items():
+        for key, value in parameters['io'].items():
             f.write(''.join([key, ' = ', str(value), '\n']))
         f.write('# Hidden options\n')
-        for key, value in hidden_parameters.items():
+        for key, value in parameters['hidden'].items():
             f.write(''.join([key, ' = ', str(value), '\n']))
 
 

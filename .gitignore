@@ -13,9 +13,12 @@ myscripts/__pycache__/*
 .\#*
 *txt
 
-# Ignore the hdf5 files
-data/*.h5
+# Ignore the data files
+data/*
 
 # Ignore jupyter notebooks
 myscripts/*.ipynb
 myscripts/.ipynb_checkpoints
+
+# Ignore the C++ binary
+bin/*
