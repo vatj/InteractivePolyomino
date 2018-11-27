@@ -205,10 +205,7 @@ def update_displayed_genome_list(old_genomes):
     Output('genome-analysis-hidden', 'children'),
     [Input('button-analyse-genome', 'n_clicks')])
 def run_analysis(n_clicks):
-    subprocess.run(["ls","-lh", "./bin"])
-    # subprocess.run(["./bin/hello.sh"], shell=True)
-    subprocess.run(['/rscratch/vatj2/cloud/PolyominoDash/InteractivePolyomino/bin/hello.sh'], shell=True)
-
+    subprocess.run(['/bin/bash /rscratch/vatj2/cloud/PolyominoDash/InteractivePolyomino/bin/hello.sh'], shell=True)
     return 'Hidden String...'
 
 
