@@ -12,7 +12,7 @@ import os
 
 # cwd = os.getcwd()
 cwd = '/rscratch/vatj2/cloud/PolyominoDash/InteractivePolyomino'
-filename = '/configure.cfg'
+filename = '/configuration.cfg'
 
 
 # In[3]:
@@ -21,29 +21,29 @@ filename = '/configure.cfg'
 # print(cwd + filename)
 
 
-# In[7]:
+# In[4]:
 
 
 parameters = dict()
 
 
-# In[10]:
+# In[5]:
 
 
 main = dict()
 
-main['ngenes'] = 2
+main['n_genes'] = 2
 main['generate_colours'] = 7
 main['metric_colours'] = 9
 main['builds'] = 40
 main['n_jiggle'] = 3
-main['threshold'] = 0.25
+main['threshold'] = 25
 main['n_samples'] = 10
-main['iso'] = True
+main['iso'] = False
 main['dup_aware'] = False
 
 
-# In[5]:
+# In[6]:
 
 
 execute = dict()
@@ -52,12 +52,12 @@ execute['simple'] = True
 execute['distribution'] = False
 
 
-# In[6]:
+# In[7]:
 
 
 io = dict()
 
-io['file_path'] = '/rscratch/vatj2/public_html/Polyominoes/data/gpmap/V8/interactive/'
+io['file_path'] = '/rscratch/vatj2/public_html/Polyominoes/data/gpmap/V8/test/'
 io['out_genome_file'] = 'SampledGenotypes'
 io['in_genome_file'] = 'SampledGenotypes'
 io['duplicate_genome_file'] = 'DuplicateSampledGenotypes'
@@ -70,17 +70,17 @@ io['genome_metric_file'] = 'GenomeMetrics'
 io['neighbour_file'] = 'Neighbourhood'
 
 
-# In[7]:
+# In[8]:
 
 
 hidden = dict()
 
-hidden['preprocess_build'] = 250
+hidden['preprocess_builds'] = 250
 hidden['allow_duplicates'] = True
 hidden['steric_forbidden'] = False
 
 
-# In[ ]:
+# In[9]:
 
 
 parameters['main'] = main
@@ -89,28 +89,24 @@ parameters['io'] = io
 parameters['hidden'] = hidden
 
 
-# In[ ]:
+# In[10]:
 
 
 def write_config(parameters, file):
     with open(file, 'w') as f:
         f.write('# Main Options\n')
         for key, value in parameters['main'].items():
-            f.write(''.join([key, ' = ', str(value), '\n']))
+            if key == 'threshold':
+                f.write(''.join([key, ' = ', str(round(value/100, 2)), '\n']))
+            else:
+                f.write(''.join([key, ' = ', str(value), '\n']))
         f.write('\n# Execution, only one option is executed\n')
         for key, value in parameters['execute'].items():
             f.write(''.join([key, ' = ', str(value), '\n']))
         f.write('\n# IO Options\n')
         for key, value in parameters['io'].items():
             f.write(''.join([key, ' = ', str(value), '\n']))
-        f.write('# Hidden options\n')
+        f.write('\n# Hidden options\n')
         for key, value in parameters['hidden'].items():
             f.write(''.join([key, ' = ', str(value), '\n']))
-
-
-# In[11]:
-
-
-
-   
 

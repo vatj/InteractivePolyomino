@@ -18,10 +18,11 @@ import re
 from app import app
 from myscripts import neighbourhood_reshape, generate_config
 
-temp_cfg = '/rscratch/vatj2/cloud/PolyominoDash/InteractivePolyomino/configure.cfg'
-temp_genomes = '/rscratch/vatj2/cloud/PolyominoDash/InteractivePolyomino/SampledGenotypes.txt'
+temp_cfg = '/rscratch/vatj2/cloud/PolyominoDash/InteractivePolyomino/configuration.cfg'
+# temp_genomes = '/rscratch/vatj2/public_html/Polyominoes/data/gpmap/V8/test/SampledGenotypes_N2_C7_T25_B40.txt'
 
-filepath = 'http://files.tcm.phy.cam.ac.uk/~vatj2/Polyominoes/data/gpmap/V8/interactive/'
+# filepath = 'http://files.tcm.phy.cam.ac.uk/~vatj2/Polyominoes/data/gpmap/V8/test/'
+filepath = '/rscratch/vatj2/public_html/Polyominoes/data/gpmap/V8/test/'
 
 display_names = ['genome', 'srobustness', 'irobustness', 'evolvability',  'robust_evolvability', 'complex_evolvability', 'rare', 'unbound', 'complex_diversity', 'diversity', 'pIDs']
 
@@ -48,7 +49,7 @@ layout = html.Div([
 	   html.Div([dcc.Dropdown(
         id='dropdown-metric-colours',
         options=[{'label': str(val), 'value': val} for val in range(3, 15, 2)],
-        value=7, multi=False, placeholder='ex : 7')],
+        value=9, multi=False, placeholder='ex : 9')],
     style={'marginTop': -5, 'display' : 'inline-block'})],
     style={'width': '400px'}),
     html.Div([
@@ -61,7 +62,7 @@ layout = html.Div([
     html.Div([
 	   html.P('Misfolding Threshold : ', style={'display' : 'inline-block'}),
 	   html.Div([dcc.Input(
-        id='box-threshold', min=0.01, max=1., step=0.01, value=0.25,
+        id='box-threshold', min=1, max=100, step=1, value=25,
         type='number', placeholder='ex : 0.25', style={'width' :  '70px'})],
     style={'marginTop': -5, 'display' : 'inline-block'})],
     style={'width': '400px'}),
@@ -110,6 +111,9 @@ layout = html.Div([
             style={'display':'none'}),
         html.Div(
             html.Button('Run Genome Analysis', id='button-analyse-genome'),
+        style={'horizontalAlign' : 'right', 'verticalAlign' : 'middle'}),
+        html.Div(
+            html.Button('Reload Table', id='button-analyse-genome'),
         style={'horizontalAlign' : 'right', 'verticalAlign' : 'middle'})
         ], style={'verticalAlign' : 'top', 'display' : 'inline-block', 'width':'800px', 'rightMargin' : '300px'}),
 
@@ -148,14 +152,14 @@ layout = html.Div([
 def write_config_file(n_clicks, ngenes, metric_colours, threshold, builds):
     local_parameters = deepcopy(generate_config.parameters)
 
-    local_parameters['main']['ngenes'] = ngenes
+    local_parameters['main']['n_genes'] = ngenes
     local_parameters['main']['metric_colours'] = metric_colours
     local_parameters['main']['threshold'] = threshold
     local_parameters['main']['builds'] = builds
 
     generate_config.write_config(local_parameters, temp_cfg)
 
-    return 'Hidden String...'
+    return json.dumps(local_parameters)
 
 @app.callback(
     Output('genome-list-python', 'children'),
@@ -171,14 +175,24 @@ def update_genome_list(n_clicks, new_genome, old_genomes):
 
 @app.callback(
     Output('genome-list-text', 'children'),
-    [Input('genome-list-python', 'children')])
-def update_displayed_genome_list(old_genomes):
+    [Input('genome-list-python', 'children')],
+    [State('custom-parameters','children')])
+def update_displayed_genome_list(old_genomes, parameters_json):
+
+    if parameters_json is None:
+        parameters = deepcopy(generate_config.parameters)
+    else:
+        parameters = json.loads(parameters_json)
+
+    ending = 'N{n_genes}_C{generate_colours}_T{threshold}_B{builds}.txt'.format(**parameters['main'])
+    file = '_'.join(['SampledGenotypes', ending])
+
     if old_genomes is None:
         return 'Enter a genome...'
 
     genomes = json.loads(old_genomes)
 
-    with open(temp_genomes, "w") as f:
+    with open(filepath+file, "w") as f:
         for genome in genomes:
             for label in eval(genome):
                 f.write(str(label) + ' ')
@@ -205,33 +219,65 @@ def update_displayed_genome_list(old_genomes):
     Output('genome-analysis-hidden', 'children'),
     [Input('button-analyse-genome', 'n_clicks')])
 def run_analysis(n_clicks):
-    subprocess.run(['/bin/bash /rscratch/vatj2/cloud/PolyominoDash/InteractivePolyomino/bin/hello.sh'], shell=True)
+    subprocess.run(['/rscratch/vatj2/cloud/PolyominoDash/InteractivePolyomino/bin/Interactive'], shell=True)
     return 'Hidden String...'
 
 
 @app.callback(
-    Output('datatable-interactivity-container', "children"),
-    [Input('datatable-genome-metrics', "derived_virtual_data"),
-     Input('datatable-genome-metrics', "derived_virtual_selected_rows")])
-def update_graph(rows, derived_virtual_selected_rows):
-    if derived_virtual_selected_rows is None:
-        derived_virtual_selected_rows = []
+    Output('datatable-genome-metrics', "data"),
+    [Input('genome-analysis-hidden', 'children')],
+    [State('custom-parameters', 'children')])
+def update_graph(string, parameters_json):
 
-    if rows is None:
+    if parameters_json is None:
+        parameters = deepcopy(generate_config.parameters)
         dff = df
     else:
-        dff = pd.DataFrame(rows)
+        parameters = json.loads(parameters_json)
+        ending = 'N{n_genes}_C{generate_colours}_T{threshold}_B{builds}_Cx{metric_colours}_J{n_jiggle}.txt'.format(**parameters['main'])
+        file = '_'.join(['GenomeMetrics', ending])
+        dff = pd.read_csv(filepath + file, sep=' ')
 
+    # print('here :')
+    # print(dff.head())
+
+    return dff.to_dict('records')
+
+
+@app.callback(
+    Output('datatable-interactivity-container', 'children'),
+    [Input('datatable-genome-metrics', "derived_virtual_data"),
+     Input('datatable-genome-metrics', "derived_virtual_selected_rows"),
+     Input('genome-analysis-hidden', 'children')],
+     [State('custom-parameters', 'children')])
+def update_graph(rows, derived_virtual_selected_rows, string, parameters_json):
+
+    if parameters_json is None:
+        parameters = deepcopy(generate_config.parameters)
+    else:
+        parameters = json.loads(parameters_json)
+
+    ending = 'N{n_genes}_C{generate_colours}_T{threshold}_B{builds}_Cx{metric_colours}_J{n_jiggle}.txt'.format(**parameters['main'])
+    metric_file = '_'.join(['GenomeMetrics', ending])
+    neighbour_file = '_'.join(['Neighbourhood', ending])
+
+
+    dff = pd.read_csv(filepath + metric_file, sep=' ')
+    dffn = pd.read_csv(filepath + neighbour_file, sep=' ', names=['genome', 'pIDs'], index_col=False)
+    ndff = neighbourhood_reshape.neighbourhood_reshape(dff, dffn, parameters['main']['n_genes'], parameters['main']['metric_colours'])
+
+    # if derived_virtual_selected_rows is None:
+    #     derived_virtual_selected_rows = []
 
     return html.Div(
         [
             dcc.Graph(
-                id=column,
+                id=genome,
                 figure={
                     "data": [
                         {
-                            "x": dff["genome"],
-                            "y": dff[column] if column in dff else [],
+                            "x": ndff.loc[slice(None),(genome,'pIDs')].value_counts().index,
+                            "y": ndff.loc[slice(None),(genome,'pIDs')].value_counts().values,
                             "type": "bar"
                         }
                     ],
@@ -243,6 +289,6 @@ def update_graph(rows, derived_virtual_selected_rows):
                     },
                 },
             )
-            for column in ["srobustness", "irobustness", "evolvability"]
+            for genome in dff['genome']
         ]
     )
